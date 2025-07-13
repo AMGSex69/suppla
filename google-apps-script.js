@@ -13,7 +13,7 @@
 const SPREADSHEET_ID = '18t5XsOhbCp3E5XaKpKuwkv2d60_-n_Fes-6OJy50vzk'; // ID вашей Google Sheets таблицы
 const SHEET_NAME = 'Заявки Suppla';
 const NOTIFICATION_EMAIL = 'egordolgih@mail.ru'; // Замените на свой email
-const FORM_URL = 'https://suppla-9b7n80zcw-dolgihegor2323-gmailcoms-projects.vercel.app';
+const FORM_URL = 'https://suppla-dk81zlczy-dolgihegor2323-gmailcoms-projects.vercel.app';
 
 /**
  * Обработка POST запросов от формы
