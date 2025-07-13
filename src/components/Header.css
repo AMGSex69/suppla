@@ -1,0 +1,157 @@
+.header {
+  background: rgba(255, 255, 255, 0.9);
+  border-bottom: 1px solid var(--border);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+  transition: var(--transition);
+}
+
+.header.scrolled {
+  background: rgba(255, 255, 255, 0.95) !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+}
+
+.logo {
+  position: relative;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.logo:hover {
+  transform: translateY(-1px);
+}
+
+.logo-main {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.logo-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logo-dots {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-left: 0.25rem;
+}
+
+.logo-dot {
+  width: 4px;
+  height: 4px;
+  background: var(--primary-color);
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.logo:hover .logo-dot:nth-child(1) {
+  transform: translateX(2px);
+  background: var(--primary-light);
+}
+
+.logo:hover .logo-dot:nth-child(2) {
+  transform: translateX(4px);
+  background: var(--primary-light);
+}
+
+.logo:hover .logo-dot:nth-child(3) {
+  transform: translateX(2px);
+  background: var(--primary-light);
+}
+
+.logo-text h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.25rem;
+  position: relative;
+  transition: var(--transition);
+}
+
+.logo-text h1::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+  transition: width 0.3s ease;
+}
+
+.logo:hover .logo-text h1::after {
+  width: 100%;
+}
+
+.logo-text .tagline {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin: 0;
+  font-weight: 400;
+  opacity: 0.8;
+  transition: opacity 0.3s ease;
+}
+
+.logo:hover .logo-text .tagline {
+  opacity: 1;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.nav a {
+  text-decoration: none;
+  color: var(--text-secondary);
+  font-weight: 500;
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.nav a:hover {
+  color: var(--primary-color);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .nav {
+    gap: 1rem;
+  }
+  
+  .nav a {
+    display: none;
+  }
+  
+  .logo-dots {
+    display: none;
+  }
+  
+  .logo-text .tagline {
+    display: none;
+  }
+  
+  .logo-text h1 {
+    font-size: 1.75rem;
+  }
+} 

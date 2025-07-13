@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Suppla — платформа для оптовых закупок</title>
+	<link rel="stylesheet" href="style.css">
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+	<!-- Header -->
+	<header class="header">
+		<div class="container">
+			<div class="header-content">
+				<div class="logo">
+					<h1>Suppla</h1>
+				</div>
+				<nav class="nav">
+					<a href="#how-it-works">Как это работает</a>
+					<a href="#contact">Контакты</a>
+					<button class="btn btn-outline">Войти</button>
+				</nav>
+			</div>
+		</div>
+	</header>
+
+	<!-- Hero Section -->
+	<section class="hero">
+		<div class="hero-bg">
+			<div class="wave-1"></div>
+			<div class="wave-2"></div>
+			<div class="gradient-circle"></div>
+		</div>
+		<div class="container">
+			<div class="hero-content">
+				<div class="hero-text">
+					<h2 class="hero-title">Suppla — платформа для оптовых закупок</h2>
+					<p class="hero-subtitle">Подключайтесь к базе из 500+ поставщиков стройматериалов, продуктов и товаров
+						для бизнеса</p>
+					<div class="hero-features">
+						<div class="feature-item">
+							<i class="fas fa-check"></i>
+							<span>Прямые цены от поставщиков</span>
+						</div>
+						<div class="feature-item">
+							<i class="fas fa-check"></i>
+							<span>Надежные контрагенты</span>
+						</div>
+						<div class="feature-item">
+							<i class="fas fa-check"></i>
+							<span>Удобные платежи</span>
+						</div>
+					</div>
+					<button class="btn btn-primary">Получить доступ</button>
+				</div>
+				<div class="hero-image">
+					<div class="mockup-container">
+						<div class="mockup-screen">
+							<div class="mockup-content">
+								<div class="mockup-header">
+									<div class="mockup-dots">
+										<span></span>
+										<span></span>
+										<span></span>
+									</div>
+								</div>
+								<div class="mockup-body">
+									<div class="supplier-card">
+										<div class="supplier-info">
+											<div class="supplier-avatar"></div>
+											<div class="supplier-details">
+												<h4>ООО "СтройМатериалы"</h4>
+												<p>Цемент М400 - 25 кг</p>
+											</div>
+										</div>
+										<div class="supplier-price">₽320</div>
+									</div>
+									<div class="supplier-card">
+										<div class="supplier-info">
+											<div class="supplier-avatar"></div>
+											<div class="supplier-details">
+												<h4>ТД "Металлург"</h4>
+												<p>Арматура А500С - 12мм</p>
+											</div>
+										</div>
+										<div class="supplier-price">₽45,500</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- How It Works Section -->
+	<section class="how-it-works" id="how-it-works">
+		<div class="container">
+			<h2 class="section-title">Как это работает</h2>
+			<div class="steps">
+				<div class="step">
+					<div class="step-icon">
+						<i class="fas fa-file-alt"></i>
+					</div>
+					<div class="step-content">
+						<h3>Оставляете заявку</h3>
+						<p>Указываете что ищете и в каком объеме</p>
+					</div>
+				</div>
+				<div class="step-arrow">
+					<i class="fas fa-arrow-right"></i>
+				</div>
+				<div class="step">
+					<div class="step-icon">
+						<i class="fas fa-search"></i>
+					</div>
+					<div class="step-content">
+						<h3>Получаете варианты</h3>
+						<p>Цены напрямую от поставщиков</p>
+					</div>
+				</div>
+				<div class="step-arrow">
+					<i class="fas fa-arrow-right"></i>
+				</div>
+				<div class="step">
+					<div class="step-icon">
+						<i class="fas fa-handshake"></i>
+					</div>
+					<div class="step-content">
+						<h3>Заключаете сделку</h3>
+						<p>Безопасно и быстро</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Contact Form Section -->
+	<section class="contact-section" id="contact">
+		<div class="container">
+			<div class="contact-content">
+				<div class="contact-info">
+					<h2>Готовы начать?</h2>
+					<p>Оставьте заявку и мы подберем для вас лучших поставщиков</p>
+					<div class="benefits">
+						<div class="benefit">
+							<i class="fas fa-clock"></i>
+							<span>Ответ в течение 30 минут</span>
+						</div>
+						<div class="benefit">
+							<i class="fas fa-shield-alt"></i>
+							<span>Проверенные поставщики</span>
+						</div>
+						<div class="benefit">
+							<i class="fas fa-percent"></i>
+							<span>Экономия до 30%</span>
+						</div>
+					</div>
+				</div>
+				<div class="contact-form">
+					<form>
+						<div class="form-group">
+							<input type="text" id="name" placeholder="Ваше имя" required>
+						</div>
+						<div class="form-group">
+							<input type="tel" id="phone" placeholder="Телефон" required>
+						</div>
+						<div class="form-group">
+							<input type="email" id="email" placeholder="Email" required>
+						</div>
+						<div class="form-group">
+							<select id="business-type" required>
+								<option value="">Вид бизнеса</option>
+								<option value="construction">Строительство</option>
+								<option value="manufacturing">Производство</option>
+								<option value="retail">Розничная торговля</option>
+								<option value="food">Общепит</option>
+								<option value="other">Другое</option>
+							</select>
+						</div>
+						<button type="submit" class="btn btn-primary">Оставить заявку</button>
+					</form>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Footer -->
+	<footer class="footer">
+		<div class="container">
+			<div class="footer-content">
+				<div class="footer-left">
+					<h3>Suppla</h3>
+					<p>Оптовые поставки для бизнеса — быстро и выгодно</p>
+				</div>
+				<div class="footer-right">
+					<div class="footer-links">
+						<a href="#">О компании</a>
+						<a href="#">Условия использования</a>
+						<a href="#">Политика конфиденциальности</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</footer>
+
+	<script src="script.js"></script>
+</body>
+
+</html>
