@@ -100,7 +100,7 @@ const ContactForm = () => {
 			await submitForm(formData);
 
 			// Показываем успешное уведомление
-			showNotification('Заявка успешно отправлена! Мы свяжемся с вами в ближайшее время.', 'success');
+			showNotification('Спасибо! Мы тестируем сервис. Как только сервис будет запущен, с вами свяжутся.', 'success');
 
 			// Очищаем форму
 			setFormData({
