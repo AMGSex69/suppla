@@ -20,10 +20,25 @@ const FORM_URL = 'https://suppla-dk81zlczy-dolgihegor2323-gmailcoms-projects.ver
  */
 function doPost(e) {
 	try {
-		console.log('📨 Получен POST запрос:', e);
+		console.log('📨 Получен POST запрос');
+
+		// Безопасная проверка объекта e
+		if (!e) {
+			console.error('❌ Объект события не определен');
+			throw new Error('Объект события не определен');
+		}
+
 		console.log('📊 Тип запроса:', typeof e);
-		console.log('📊 Параметры запроса:', e.parameter);
-		console.log('📊 Headers:', e.headers);
+
+		// Безопасная проверка параметров
+		if (e.parameter) {
+			console.log('📊 Параметры запроса:', e.parameter);
+		}
+
+		// Безопасная проверка заголовков
+		if (e.headers) {
+			console.log('📊 Headers:', e.headers);
+		}
 
 		// Получаем данные из POST запроса
 		let data;
@@ -32,21 +47,33 @@ function doPost(e) {
 			console.log('📋 Содержимое POST запроса:', e.postData.contents);
 			console.log('📋 Тип содержимого:', typeof e.postData.contents);
 			console.log('📋 Длина содержимого:', e.postData.contents.length);
-			data = JSON.parse(e.postData.contents);
+
+			try {
+				data = JSON.parse(e.postData.contents);
+			} catch (parseError) {
+				console.error('❌ Ошибка парсинга JSON:', parseError);
+				throw new Error('Некорректный формат данных JSON');
+			}
 		} else {
+			console.error('❌ Нет данных POST запроса');
+			console.log('📊 Структура e:', Object.keys(e || {}));
+			console.log('📊 postData:', e.postData);
 			throw new Error('Не удалось получить данные из запроса');
 		}
 
 		console.log('🔍 Обработанные данные:', data);
 		console.log('🔍 Тип data:', typeof data);
 		console.log('🔍 Ключи data:', Object.keys(data));
+		console.log('🔍 businessType:', data.businessType);
+		console.log('🔍 Тип businessType:', typeof data.businessType);
+		console.log('🔍 Это массив?:', Array.isArray(data.businessType));
 
 		// Валидация данных
-		if (!data.name || !data.phone || !data.email || !data.businessType) {
+		if (!data.role || !data.name || !data.phone || !data.email || !data.businessType) {
 			return ContentService
 				.createTextOutput(JSON.stringify({
 					success: false,
-					error: 'Все поля обязательны для заполнения'
+					error: 'Все обязательные поля должны быть заполнены'
 				}))
 				.setMimeType(ContentService.MimeType.JSON);
 		}
@@ -81,13 +108,20 @@ function doPost(e) {
 			.setMimeType(ContentService.MimeType.JSON);
 
 	} catch (error) {
-		console.error('Ошибка обработки заявки:', error);
+		console.error('❌ Ошибка обработки заявки:', error);
+		console.error('❌ Стек ошибки:', error.stack);
+		console.error('❌ Сообщение ошибки:', error.message);
+
+		// Возвращаем более детальную информацию об ошибке для отладки
+		const errorResponse = {
+			success: false,
+			error: 'Внутренняя ошибка сервера',
+			details: error.message,
+			timestamp: new Date().toISOString()
+		};
 
 		return ContentService
-			.createTextOutput(JSON.stringify({
-				success: false,
-				error: 'Внутренняя ошибка сервера'
-			}))
+			.createTextOutput(JSON.stringify(errorResponse))
 			.setMimeType(ContentService.MimeType.JSON);
 	}
 }
@@ -112,12 +146,19 @@ function saveToSheet(data) {
 		console.log('📞 Длина номера:', data.phone ? data.phone.length : 0);
 
 		// Подготавливаем данные для записи
+		const businessTypeText = Array.isArray(data.businessType)
+			? getBusinessTypeLabel(data.businessType, data.role)
+			: getBusinessTypeLabel(data.businessType, data.role);
+
 		const rowData = [
 			submissionId,
+			getRoleLabel(data.role),
 			data.name,
 			"'" + data.phone, // Добавляем апостроф для корректного отображения номера
 			data.email,
-			getBusinessTypeLabel(data.businessType),
+			businessTypeText,
+			data.companyName || '',
+			data.comment || '',
 			timestamp,
 			'Новая'
 		];
@@ -159,34 +200,49 @@ function getOrCreateSheet() {
 			sheet = spreadsheet.insertSheet(SHEET_NAME);
 		}
 
-		// Проверяем, есть ли заголовки
-		if (sheet.getLastRow() === 0) {
-			const headers = [
-				'ID',
-				'Имя',
-				'Телефон',
-				'Email',
-				'Тип бизнеса',
-				'Дата создания',
-				'Статус'
-			];
+		// Проверяем, есть ли правильные заголовки
+		const currentHeaders = sheet.getLastRow() > 0 ? sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0] : [];
+		const expectedHeaders = [
+			'ID',
+			'Роль',
+			'Имя',
+			'Телефон',
+			'Email',
+			'Тип бизнеса/продукции',
+			'Компания',
+			'Комментарий',
+			'Дата создания',
+			'Статус'
+		];
 
-			sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+		// Если заголовков нет или они не соответствуют ожидаемым, создаем/обновляем их
+		if (sheet.getLastRow() === 0 || currentHeaders.length !== expectedHeaders.length) {
+			console.log('🔧 Создаем/обновляем заголовки таблицы...');
+
+			// Если есть данные, но заголовки неправильные, вставляем строку сверху
+			if (sheet.getLastRow() > 0 && currentHeaders.length !== expectedHeaders.length) {
+				sheet.insertRowBefore(1);
+			}
+
+			sheet.getRange(1, 1, 1, expectedHeaders.length).setValues([expectedHeaders]);
 
 			// Форматируем заголовки
-			const headerRange = sheet.getRange(1, 1, 1, headers.length);
+			const headerRange = sheet.getRange(1, 1, 1, expectedHeaders.length);
 			headerRange.setFontWeight('bold');
 			headerRange.setBackground('#4285f4');
 			headerRange.setFontColor('#ffffff');
 
 			// Устанавливаем ширину колонок
 			sheet.setColumnWidth(1, 120); // ID
-			sheet.setColumnWidth(2, 150); // Имя
-			sheet.setColumnWidth(3, 150); // Телефон
-			sheet.setColumnWidth(4, 200); // Email
-			sheet.setColumnWidth(5, 150); // Тип бизнеса
-			sheet.setColumnWidth(6, 150); // Дата
-			sheet.setColumnWidth(7, 100); // Статус
+			sheet.setColumnWidth(2, 120); // Роль
+			sheet.setColumnWidth(3, 150); // Имя
+			sheet.setColumnWidth(4, 150); // Телефон
+			sheet.setColumnWidth(5, 200); // Email
+			sheet.setColumnWidth(6, 180); // Тип бизнеса/продукции
+			sheet.setColumnWidth(7, 200); // Компания
+			sheet.setColumnWidth(8, 300); // Комментарий
+			sheet.setColumnWidth(9, 150); // Дата
+			sheet.setColumnWidth(10, 100); // Статус
 		}
 
 		return {
@@ -212,10 +268,13 @@ function sendNotification(data, submissionId, spreadsheetId) {
 
 📋 ИНФОРМАЦИЯ О ЗАЯВКЕ:
 • ID: ${submissionId}
+• Роль: ${getRoleLabel(data.role)}
 • Имя: ${data.name}
 • Телефон: ${data.phone}
 • Email: ${data.email}
-• Тип бизнеса: ${getBusinessTypeLabel(data.businessType)}
+• Тип бизнеса/продукции: ${getBusinessTypeLabel(data.businessType, data.role)}
+• Компания: ${data.companyName || 'Не указана'}
+• Комментарий: ${data.comment || 'Не указан'}
 • Дата: ${new Date().toLocaleString('ru-RU')}
 
 🔗 ДЕЙСТВИЯ:
@@ -243,32 +302,186 @@ function isValidEmail(email) {
 }
 
 /**
- * Получение человекочитаемого названия типа бизнеса
+ * Получение человекочитаемого названия роли
  */
-function getBusinessTypeLabel(businessType) {
+function getRoleLabel(role) {
 	const labels = {
-		'retail': 'Розничная торговля',
-		'wholesale': 'Оптовая торговля',
-		'manufacturing': 'Производство',
-		'construction': 'Строительство',
-		'services': 'Услуги',
-		'other': 'Другое'
+		'supplier': 'Поставщик',
+		'buyer': 'Покупатель'
 	};
 
-	return labels[businessType] || businessType;
+	return labels[role] || role;
+}
+
+/**
+ * Получение человекочитаемого названия типа бизнеса/продукции
+ */
+function getBusinessTypeLabel(businessType, role) {
+	// Если businessType - массив, обрабатываем каждый элемент
+	if (Array.isArray(businessType)) {
+		return businessType.map(type => getBusinessTypeLabel(type, role)).join(', ');
+	}
+
+	if (role === 'supplier') {
+		const supplierLabels = {
+			'construction': 'Строительные материалы',
+			'manufacturing': 'Производство и промышленность',
+			'food': 'Продукты питания',
+			'agriculture': 'Сельское хозяйство',
+			'textiles': 'Текстиль и одежда',
+			'electronics': 'Электроника и IT',
+			'automotive': 'Автомобильная промышленность',
+			'chemicals': 'Химическая промышленность',
+			'medical': 'Медицинское оборудование',
+			'furniture': 'Мебель и интерьер',
+			'packaging': 'Упаковка и тара',
+			'energy': 'Энергетика',
+			'logistics': 'Логистика и транспорт',
+			'services': 'Услуги',
+			'other': 'Другое'
+		};
+		return supplierLabels[businessType] || businessType;
+	} else {
+		const buyerLabels = {
+			'construction': 'Строительные материалы',
+			'manufacturing': 'Промышленное оборудование',
+			'food': 'Продукты питания',
+			'agriculture': 'Сельскохозяйственная продукция',
+			'textiles': 'Текстиль и одежда',
+			'electronics': 'Электроника и IT товары',
+			'automotive': 'Автозапчасти и комплектующие',
+			'chemicals': 'Химические товары',
+			'medical': 'Медицинские товары',
+			'furniture': 'Мебель и интерьер',
+			'office': 'Офисные товары',
+			'packaging': 'Упаковочные материалы',
+			'energy': 'Энергетические товары',
+			'raw_materials': 'Сырье и материалы',
+			'other': 'Другое'
+		};
+		return buyerLabels[businessType] || businessType;
+	}
 }
 
 /**
  * Обработка GET запросов (для тестирования)
  */
 function doGet(e) {
-	return ContentService
-		.createTextOutput(JSON.stringify({
-			status: 'OK',
-			message: 'Suppla Google Apps Script работает',
-			timestamp: new Date().toISOString()
-		}))
-		.setMimeType(ContentService.MimeType.JSON);
+	try {
+		console.log('📨 Получен GET запрос');
+		console.log('📊 Параметры GET:', e ? e.parameter : 'не определены');
+
+		return ContentService
+			.createTextOutput(JSON.stringify({
+				status: 'OK',
+				message: 'Suppla Google Apps Script работает',
+				timestamp: new Date().toISOString(),
+				version: '2.0 - Updated for new form fields'
+			}))
+			.setMimeType(ContentService.MimeType.JSON);
+	} catch (error) {
+		console.error('❌ Ошибка GET запроса:', error);
+		return ContentService
+			.createTextOutput(JSON.stringify({
+				status: 'ERROR',
+				message: error.message,
+				timestamp: new Date().toISOString()
+			}))
+			.setMimeType(ContentService.MimeType.JSON);
+	}
+}
+
+/**
+ * Функция для принудительного обновления заголовков таблицы
+ */
+function updateTableHeaders() {
+	console.log('🔧 Принудительное обновление заголовков...');
+
+	try {
+		const result = getOrCreateSheet();
+		const sheet = result.sheet;
+
+		const expectedHeaders = [
+			'ID',
+			'Роль',
+			'Имя',
+			'Телефон',
+			'Email',
+			'Тип бизнеса/продукции',
+			'Компания',
+			'Комментарий',
+			'Дата создания',
+			'Статус'
+		];
+
+		// Получаем текущие заголовки
+		const currentHeaders = sheet.getLastRow() > 0 ? sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0] : [];
+
+		console.log('📊 Текущие заголовки:', currentHeaders);
+		console.log('📊 Ожидаемые заголовки:', expectedHeaders);
+
+		// Если есть данные и заголовки неправильные, вставляем новую строку сверху
+		if (sheet.getLastRow() > 0 && currentHeaders.length !== expectedHeaders.length) {
+			console.log('🔧 Вставляем новую строку для заголовков...');
+			sheet.insertRowBefore(1);
+		}
+
+		// Устанавливаем правильные заголовки
+		sheet.getRange(1, 1, 1, expectedHeaders.length).setValues([expectedHeaders]);
+
+		// Форматируем заголовки
+		const headerRange = sheet.getRange(1, 1, 1, expectedHeaders.length);
+		headerRange.setFontWeight('bold');
+		headerRange.setBackground('#4285f4');
+		headerRange.setFontColor('#ffffff');
+
+		// Устанавливаем ширину колонок
+		sheet.setColumnWidth(1, 120); // ID
+		sheet.setColumnWidth(2, 120); // Роль
+		sheet.setColumnWidth(3, 150); // Имя
+		sheet.setColumnWidth(4, 150); // Телефон
+		sheet.setColumnWidth(5, 200); // Email
+		sheet.setColumnWidth(6, 180); // Тип бизнеса/продукции
+		sheet.setColumnWidth(7, 200); // Компания
+		sheet.setColumnWidth(8, 300); // Комментарий
+		sheet.setColumnWidth(9, 150); // Дата
+		sheet.setColumnWidth(10, 100); // Статус
+
+		console.log('✅ Заголовки успешно обновлены!');
+		console.log('📊 Ссылка на таблицу:', `https://docs.google.com/spreadsheets/d/${result.spreadsheet.getId()}`);
+
+		return true;
+
+	} catch (error) {
+		console.error('❌ Ошибка обновления заголовков:', error);
+		return false;
+	}
+}
+
+/**
+ * Простая функция для тестирования работоспособности
+ */
+function testBasic() {
+	console.log('🧪 Начинаем базовый тест...');
+
+	try {
+		// Тестируем создание/получение таблицы
+		const result = getOrCreateSheet();
+		console.log('✅ Таблица успешно получена/создана');
+		console.log('📊 ID таблицы:', result.spreadsheet.getId());
+		console.log('📊 Название листа:', result.sheet.getName());
+
+		// Тестируем функции обработки данных
+		console.log('✅ Тест getRoleLabel:', getRoleLabel('supplier'));
+		console.log('✅ Тест getBusinessTypeLabel:', getBusinessTypeLabel('construction', 'supplier'));
+
+		console.log('🎉 Базовый тест завершен успешно!');
+		return true;
+
+	} catch (error) {
+		console.error('❌ Ошибка базового теста:', error);
+		return false;
+	}
 }
 
 /**
@@ -276,10 +489,13 @@ function doGet(e) {
  */
 function testSubmission() {
 	const testData = {
+		role: 'supplier',
 		name: 'Тест Тестович',
 		phone: '+7 (999) 123-45-67',
 		email: 'test@example.com',
-		businessType: 'retail'
+		businessType: ['construction', 'manufacturing', 'services'],
+		companyName: 'ООО "Тестовая компания"',
+		comment: 'Самое сложное - найти клиентов, которые готовы работать на долгосрочной основе'
 	};
 
 	const mockEvent = {
@@ -297,10 +513,13 @@ function testSubmission() {
  */
 function testSubmissionFromSite() {
 	const testData = {
+		role: 'buyer',
 		name: 'Егор',
 		phone: '+7 (916) 326-47-05',
 		email: 'egordolgih@mail.ru',
-		businessType: 'construction'
+		businessType: ['construction', 'manufacturing'],
+		companyName: 'ООО "СтройПроект"',
+		comment: 'Сложно найти поставщиков с адекватными ценами и качественными материалами'
 	};
 
 	console.log('🧪 Тестируем данные с сайта:');

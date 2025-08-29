@@ -1,3 +1,23 @@
+/* Back Button */
+.back-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--primary-color);
+  cursor: pointer;
+  margin-bottom: 1.5rem;
+  font-weight: 500;
+  transition: var(--transition);
+}
+
+.back-button:hover {
+  color: var(--primary-dark);
+}
+
+.back-button i {
+  font-size: 0.9rem;
+}
+
 .contact-section {
   padding: 5rem 0;
   background: var(--background);
@@ -202,4 +222,30 @@
     left: 10px;
     max-width: none;
   }
+}
+
+/* Textarea styles */
+.form-group textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 1rem;
+  border: 2px solid var(--border);
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  font-family: inherit;
+  line-height: 1.5;
+  resize: vertical;
+  transition: var(--transition);
+  background: var(--background);
+}
+
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(30, 90, 246, 0.1);
+}
+
+.form-group textarea::placeholder {
+  color: var(--text-light);
+  font-style: italic;
 } 

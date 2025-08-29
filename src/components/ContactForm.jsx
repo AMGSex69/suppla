@@ -1,16 +1,45 @@
 import React, { useState } from 'react';
 import './ContactForm.css';
+import RoleSelection from './RoleSelection';
+import MultiSelect from './MultiSelect';
 import { submitForm, isGoogleScriptReady } from '../config/google';
 
 const ContactForm = () => {
+	const [selectedRole, setSelectedRole] = useState(null);
 	const [formData, setFormData] = useState({
+		role: '',
 		name: '',
 		phone: '',
 		email: '',
-		businessType: ''
+		businessType: [],
+		companyName: '',
+		comment: ''
 	});
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [notification, setNotification] = useState(null);
+
+	const handleRoleSelect = (role) => {
+		setSelectedRole(role);
+		setFormData(prev => ({
+			...prev,
+			role: role,
+			businessType: [], // Сбрасываем тип бизнеса при смене роли
+			comment: ''
+		}));
+	};
+
+	const handleBackToRoleSelection = () => {
+		setSelectedRole(null);
+		setFormData({
+			role: '',
+			name: '',
+			phone: '',
+			email: '',
+			businessType: [],
+			companyName: '',
+			comment: ''
+		});
+	};
 
 	const handleChange = (e) => {
 		let { name, value } = e.target;
@@ -51,10 +80,10 @@ const ContactForm = () => {
 	};
 
 	const validateForm = () => {
-		const { name, phone, email, businessType } = formData;
+		const { role, name, phone, email, businessType } = formData;
 
-		if (!name || !phone || !email || !businessType) {
-			showNotification('Пожалуйста, заполните все поля', 'error');
+		if (!role || !name || !phone || !email || !businessType || businessType.length === 0) {
+			showNotification('Пожалуйста, заполните все обязательные поля', 'error');
 			return false;
 		}
 
@@ -96,6 +125,12 @@ const ContactForm = () => {
 		setIsSubmitting(true);
 
 		try {
+			// Логируем данные перед отправкой для отладки
+			console.log('🚀 Отправляем данные формы:', formData);
+			console.log('🔍 Роль:', formData.role);
+			console.log('🔍 Компания:', formData.companyName);
+			console.log('🔍 Комментарий:', formData.comment);
+
 			// Отправляем данные через конфигурированную функцию
 			await submitForm(formData);
 
@@ -104,10 +139,13 @@ const ContactForm = () => {
 
 			// Очищаем форму
 			setFormData({
+				role: selectedRole,
 				name: '',
 				phone: '',
 				email: '',
-				businessType: ''
+				businessType: [],
+				companyName: '',
+				comment: ''
 			});
 
 		} catch (error) {
@@ -124,81 +162,158 @@ const ContactForm = () => {
 		}
 	};
 
+	// Функции для получения опций в зависимости от роли
+	const getBusinessTypeOptions = () => {
+		if (selectedRole === 'supplier') {
+			return [
+				{ value: 'construction', label: 'Строительные материалы' },
+				{ value: 'manufacturing', label: 'Производство и промышленность' },
+				{ value: 'food', label: 'Продукты питания' },
+				{ value: 'agriculture', label: 'Сельское хозяйство' },
+				{ value: 'textiles', label: 'Текстиль и одежда' },
+				{ value: 'electronics', label: 'Электроника и IT' },
+				{ value: 'automotive', label: 'Автомобильная промышленность' },
+				{ value: 'chemicals', label: 'Химическая промышленность' },
+				{ value: 'medical', label: 'Медицинское оборудование' },
+				{ value: 'furniture', label: 'Мебель и интерьер' },
+				{ value: 'packaging', label: 'Упаковка и тара' },
+				{ value: 'energy', label: 'Энергетика' },
+				{ value: 'logistics', label: 'Логистика и транспорт' },
+				{ value: 'services', label: 'Услуги' },
+				{ value: 'other', label: 'Другое' }
+			];
+		} else {
+			return [
+				{ value: 'construction', label: 'Строительные материалы' },
+				{ value: 'manufacturing', label: 'Промышленное оборудование' },
+				{ value: 'food', label: 'Продукты питания' },
+				{ value: 'agriculture', label: 'Сельскохозяйственная продукция' },
+				{ value: 'textiles', label: 'Текстиль и одежда' },
+				{ value: 'electronics', label: 'Электроника и IT товары' },
+				{ value: 'automotive', label: 'Автозапчасти и комплектующие' },
+				{ value: 'chemicals', label: 'Химические товары' },
+				{ value: 'medical', label: 'Медицинские товары' },
+				{ value: 'furniture', label: 'Мебель и интерьер' },
+				{ value: 'office', label: 'Офисные товары' },
+				{ value: 'packaging', label: 'Упаковочные материалы' },
+				{ value: 'energy', label: 'Энергетические товары' },
+				{ value: 'raw_materials', label: 'Сырье и материалы' },
+				{ value: 'other', label: 'Другое' }
+			];
+		}
+	};
+
+	const getCommentPlaceholder = () => {
+		if (selectedRole === 'supplier') {
+			return 'Что самое сложное в поиске новых клиентов для вашего бизнеса?';
+		} else {
+			return 'С какими главными трудностями вы сталкиваетесь при поиске новых поставщиков?';
+		}
+	};
+
+	const getRoleTitle = () => {
+		if (selectedRole === 'supplier') {
+			return 'Регистрация поставщика';
+		} else {
+			return 'Регистрация покупателя';
+		}
+	};
+
 	return (
 		<section className="contact-section" id="contact">
 			<div className="container">
-				<div className="contact-content">
-					<div className="contact-info">
-						<h2>Готовы начать?</h2>
-						<p>Оставьте заявку и мы подберем для вас лучших поставщиков</p>
-						<div className="benefits">
-							<div className="benefit">
-								<i className="fas fa-clock"></i>
-								<span>Ответ в течение 30 минут</span>
+				{!selectedRole ? (
+					<RoleSelection onRoleSelect={handleRoleSelect} />
+				) : (
+					<div className="contact-content">
+						<div className="contact-info">
+							<div className="back-button" onClick={handleBackToRoleSelection}>
+								<i className="fas fa-arrow-left"></i>
+								<span>Назад к выбору роли</span>
 							</div>
-							<div className="benefit">
-								<i className="fas fa-shield-alt"></i>
-								<span>Проверенные поставщики</span>
-							</div>
-							<div className="benefit">
-								<i className="fas fa-percent"></i>
-								<span>Экономия до 30%</span>
+							<h2>{getRoleTitle()}</h2>
+							<p>Заполните форму и мы свяжемся с вами в ближайшее время</p>
+							<div className="benefits">
+								<div className="benefit">
+									<i className="fas fa-clock"></i>
+									<span>Ответ в течение 30 минут</span>
+								</div>
+								<div className="benefit">
+									<i className="fas fa-shield-alt"></i>
+									<span>Проверенные партнеры</span>
+								</div>
+								<div className="benefit">
+									<i className="fas fa-percent"></i>
+									<span>Выгодные условия</span>
+								</div>
 							</div>
 						</div>
+						<div className="contact-form">
+							<form onSubmit={handleSubmit}>
+								<div className="form-group">
+									<input
+										type="text"
+										name="name"
+										placeholder="Ваше имя *"
+										value={formData.name}
+										onChange={handleChange}
+										required
+									/>
+								</div>
+								<div className="form-group">
+									<input
+										type="tel"
+										name="phone"
+										placeholder="Телефон *"
+										value={formData.phone}
+										onChange={handleChange}
+										required
+									/>
+								</div>
+								<div className="form-group">
+									<input
+										type="email"
+										name="email"
+										placeholder="Email *"
+										value={formData.email}
+										onChange={handleChange}
+										required
+									/>
+								</div>
+								<div className="form-group">
+									<MultiSelect
+										name="businessType"
+										value={formData.businessType}
+										onChange={handleChange}
+										options={getBusinessTypeOptions()}
+										placeholder={selectedRole === 'supplier' ? 'Выберите виды бизнеса *' : 'Выберите виды продукции *'}
+									/>
+								</div>
+								<div className="form-group">
+									<input
+										type="text"
+										name="companyName"
+										placeholder="Наименование компании"
+										value={formData.companyName}
+										onChange={handleChange}
+									/>
+								</div>
+								<div className="form-group">
+									<textarea
+										name="comment"
+										placeholder={getCommentPlaceholder()}
+										value={formData.comment}
+										onChange={handleChange}
+										rows="4"
+									/>
+								</div>
+								<button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+									{isSubmitting ? 'Отправляем...' : 'Отправить заявку'}
+								</button>
+							</form>
+						</div>
 					</div>
-					<div className="contact-form">
-						<form onSubmit={handleSubmit}>
-							<div className="form-group">
-								<input
-									type="text"
-									name="name"
-									placeholder="Ваше имя"
-									value={formData.name}
-									onChange={handleChange}
-									required
-								/>
-							</div>
-							<div className="form-group">
-								<input
-									type="tel"
-									name="phone"
-									placeholder="Телефон"
-									value={formData.phone}
-									onChange={handleChange}
-									required
-								/>
-							</div>
-							<div className="form-group">
-								<input
-									type="email"
-									name="email"
-									placeholder="Email"
-									value={formData.email}
-									onChange={handleChange}
-									required
-								/>
-							</div>
-							<div className="form-group">
-								<select
-									name="businessType"
-									value={formData.businessType}
-									onChange={handleChange}
-									required
-								>
-									<option value="">Вид бизнеса</option>
-									<option value="construction">Строительство</option>
-									<option value="manufacturing">Производство</option>
-									<option value="retail">Розничная торговля</option>
-									<option value="food">Общепит</option>
-									<option value="other">Другое</option>
-								</select>
-							</div>
-							<button type="submit" className="btn btn-primary" disabled={isSubmitting}>
-								{isSubmitting ? 'Отправляем...' : 'Отправить заявку'}
-							</button>
-						</form>
-					</div>
-				</div>
+				)}
 			</div>
 
 			{notification && (
